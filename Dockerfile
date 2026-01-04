@@ -1,33 +1,30 @@
-FROM ubuntu:jammy-20231004
+FROM ubuntu:24.04
 
 ENV \
-    DEBCONF_NONINTERACTIVE_SEEN="true" \
     DEBIAN_FRONTEND="noninteractive" \
-    APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE="DontWarn"
+    PIP_DISABLE_PIP_VERSION_CHECK="1" \
+    PYTHONDONTWRITEBYTECODE="1" \
+    PYTHONUNBUFFERED="1"
 
 WORKDIR /app
 
-COPY . .
-
-RUN \
-    apt-get -qq update \
-    && \
-    apt-get -qq install --no-install-recommends -y \
+RUN apt-get -qq update \
+    && apt-get -qq install --no-install-recommends -y \
         intel-gpu-tools \
+        python3 \
         python3-pip \
         tini \
-    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
-    && apt-get autoremove -y \
-    && apt-get clean \
-    && pip install --no-cache-dir -r requirements.txt \
-    && rm -rf \
-        /tmp/* \
-        /var/lib/apt/lists/* \
-        /var/cache/apt/* \
-        /var/tmp/*
+    && rm -rf /var/lib/apt/lists/*
 
-ENTRYPOINT ["/usr/bin/tini", "--", "/usr/bin/python3"]
-CMD ["/app/exporter.py"]
+COPY requirements.txt /app/requirements.txt
+RUN python3 -m pip install --no-cache-dir -r /app/requirements.txt --break-system-packages
+
+COPY exporter.py /app/exporter.py
+
+EXPOSE 9100
+
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["python3", "/app/exporter.py"]
 
 LABEL \
     org.opencontainers.image.title="intel-gpu-exporter" \

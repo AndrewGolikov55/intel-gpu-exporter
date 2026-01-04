@@ -41,6 +41,12 @@ You can collect metrics after start container at the following address:
 http://localhost:9100/metrics
 ```
 
+Environment variables:
+
+- `EXPORTER_PORT` (default: `9100`)
+- `REFRESH_PERIOD_MS` (default: `5000`)
+- `LOG_LEVEL` (default: `INFO`)
+
 Or you can run script manually, just run:
 
 ```
